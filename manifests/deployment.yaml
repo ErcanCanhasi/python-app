@@ -1,7 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  annotations:
+    circleci.com/project-id: 80b12101-7f78-4f12-92a2-4d7baa6cee59
   name: flask-app
+  
 spec:
   replicas: 3
   selector:
