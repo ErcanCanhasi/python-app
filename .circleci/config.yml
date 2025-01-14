@@ -39,7 +39,7 @@ jobs:
       - run:
           name: Test the application
           command: |
-            sleep 5  # Wait for the container to start
+            sleep 30  # Wait for the container to start
             curl -s http://localhost:5000 | grep "Hello, World!"
 
 workflows:
