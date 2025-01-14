@@ -20,14 +20,14 @@ jobs:
       - run:
           name: Deploy Application
           command: |
-            minikube kubectl apply -f manifest/deployment.yaml
-            minikube kubectl apply -f manifest/flask-service.yaml
-      - run:
+            minikube kubectl -- apply -f manifest/deployment.yaml
+            minikube kubectl -- apply -f manifest/flask-service.yaml
+
+     - run:
           name: Verify Deployment
           command: |
-            minikube kubectl get pods -o wide
-            minikube kubectl get svc
- 
+            minikube kubectl -- get pods -o wide
+            minikube kubectl -- get svc
 
 workflows:
   version: 2
