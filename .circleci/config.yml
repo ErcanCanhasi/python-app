@@ -1,7 +1,7 @@
 version: 2.1
  
 jobs:
-  build:
+  build_and_deploy:
     machine:
       image: ubuntu-2004:current
       resource_class: large  
@@ -17,6 +17,17 @@ jobs:
           name: Check status
           command: |
             minikube status
+      - run:
+          name: Deploy Application
+          command: |
+            minikube kubectl apply -f manifest/deployment.yaml
+            minikube kubectl apply -f manifest/flask-service.yaml
+      - run:
+          name: Verify Deployment
+          command: |
+            minikube kubectl get pods -o wide
+            minikube kubectl get svc
+ 
 
 workflows:
   version: 2
