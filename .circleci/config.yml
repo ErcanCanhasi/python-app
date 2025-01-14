@@ -1,52 +1,52 @@
 version: 2.1
 
 jobs:
-  build-and-push:
+  setup-minikube:
     docker:
-      - image: cimg/base:2024.02
+      - image: cimg/base:stable
     steps:
       - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
       - run:
-          name: Build Docker image
-          command: docker build -t $DOCKER_HUB_USERNAME/$IMAGE_NAME:latest .
-      - run:
-          name: Debug environment variables
+          name: Install kubectl
           command: |
-            echo "DOCKER_HUB_USERNAME: $DOCKER_HUB_USERNAME"
-            echo "DOCKER_HUB_PASSWORD: $DOCKER_HUB_PASSWORD"
+            curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+            sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
       - run:
-          name: Log in to Docker Hub
-          command: echo "$DOCKER_HUB_PASSWORD" | docker login -u "$DOCKER_HUB_USERNAME" --password-stdin
+          name: Install Minikube
+          command: |
+            curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+            chmod +x minikube
+            sudo mv minikube /usr/local/bin/
       - run:
-          name: Push Docker image to Docker Hub
-          command: docker push $DOCKER_HUB_USERNAME/$IMAGE_NAME:latest
+          name: Start Minikube
+          command: |
+            minikube start --driver=docker
+      - run:
+          name: Verify Minikube and kubectl
+          command: |
+            minikube status
+            kubectl version --client
 
-  test:
+  deploy-app:
     docker:
-      - image: cimg/base:2024.02
+      - image: cimg/base:stable
     steps:
       - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
       - run:
-          name: Pull Docker image from Docker Hub
-          command: docker pull $DOCKER_HUB_USERNAME/$IMAGE_NAME:latest
-      - run:
-          name: Run Docker container
-          command: docker run -d -p 5000:5000 --name test-container $DOCKER_HUB_USERNAME/$IMAGE_NAME:latest
-      - run:
-          name: Test the application
+          name: Deploy Application
           command: |
-            sleep 30  # Wait for the container to start
-            curl -s http://localhost:5000 | grep "Hello, World!"
+            kubectl apply -f manifest/deployment.yaml
+            kubectl apply -f manifest/flask-service.yaml
+      - run:
+          name: Verify Deployment
+          command: |
+            kubectl get pods -o wide
+            kubectl get svc
 
 workflows:
-  version: 2
-  build-test-deploy:
+  deploy-minikube:
     jobs:
-      - build-and-push
-      - test:
+      - setup-minikube
+      - deploy-app:
           requires:
-            - build-and-push
+            - setup-minikube
