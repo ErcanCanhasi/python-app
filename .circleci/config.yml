@@ -12,6 +12,11 @@ jobs:
           name: Build Docker image
           command: docker build -t $DOCKER_HUB_USER_ID/$IMAGE_NAME:latest .
       - run:
+          name: Debug environment variables
+          command: |
+            echo "DOCKER_HUB_USERNAME: $DOCKER_HUB_USERNAME"
+            echo "DOCKER_HUB_PASSWORD: $DOCKER_HUB_PASSWORD"
+      - run:
           name: Log in to Docker Hub
           command: echo "$DOCKER_HUB_PASSWORD" | docker login -u "$DOCKER_HUB_USERNAME" --password-stdin
       - run:
